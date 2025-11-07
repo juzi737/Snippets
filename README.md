@@ -10,7 +10,6 @@
 转化网址：https://juzi737.github.io/Snippets/
 ```bash
 示例路径：/c29ja3M1Oi8vV1k0azY1OTk0OmVQMkVQUHdoQDIwMi4xNjfdgsd2OjQ0Mw
-X-ProxyIP
 ```
 ✅其他（可选）方案
 #
