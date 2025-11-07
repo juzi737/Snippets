@@ -7,7 +7,7 @@
 #
 ✅方案二：其他客户端,把你的代理ip改成64编码
 #
-转化网址：https://juzi737.github.io/Snippets/
+转化网址：https://scosk5.ssr.baby
 ```bash
 示例路径：/c29ja3M1Oi8vV1k0azY1OTk0OmVQMkVQUHdoQDIwMi4xNjfdgsd2OjQ0Mw
 ```
