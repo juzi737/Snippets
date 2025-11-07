@@ -3,16 +3,16 @@
 #
 ✅ 改完后你可以这样用：
 #
-方案一:v2客户保持原始方法
+✅方案一:v2客户保持原始方法
 #
-方案二：其他客户端,把你的代理ip改成64编码
+✅方案二：其他客户端,把你的代理ip改成64编码
 #
 转化网址：https://juzi737.github.io/Snippets/
 ```bash
 示例路径：/c29ja3M1Oi8vV1k0azY1OTk0OmVQMkVQUHdoQDIwMi4xNjfdgsd2OjQ0Mw
 X-ProxyIP
 ```
-其他（可选）方案
+✅其他（可选）方案
 #
 例如小火箭，可以选择在ws路径里面右上角+添加新的请求头！
 #
