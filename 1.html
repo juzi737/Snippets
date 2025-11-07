@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Base64 转换器 · 代理可用性检测</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;background:linear-gradient(180deg,#f6f7fb,#eef1f5);color:#111}
+body{display:flex;justify-content:center;align-items:center}
+.wrapper{width:100%;display:flex;justify-content:center;align-items:center;padding:40px 20px}
+.card{width:70%;max-width:900px;min-width:360px;background:#fff;border-radius:28px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:36px 28px}
+h1{text-align:center;font-size:24px;font-weight:600;margin:0 0 24px}
+textarea{width:100%;height:160px;padding:14px;border:none;border-radius:18px;background:#f2f3f6;resize:none;font-size:15px;color:#111;outline:none}
+.btns{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;margin:24px 0}
+button{border:none;border-radius:14px;padding:12px 0;font-size:15px;font-weight:600;cursor:pointer;background:#007aff;color:#fff;box-shadow:0 2px 6px rgba(0,122,255,.2)}
+button.secondary{background:#f2f3f6;color:#111;box-shadow:none}
+.output{background:#f2f3f6;border-radius:18px;padding:16px;min-height:120px;word-break:break-word;font-family:Menlo,monospace;font-size:14px;color:#333}
+.row{display:grid;grid-template-columns:1fr;gap:12px}
+.result{padding:12px;border-radius:14px;background:#f8f9fc}
+.muted{color:#666;font-size:13px}
+@media (max-width:768px){
+body{align-items:flex-start}
+.wrapper{padding:20px 10px}
+.card{width:100%;padding:24px 18px;border-radius:20px}
+h1{font-size:20px}
+button{font-size:14px;padding:10px 0}
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+<div class="card">
+<h1>Base64 转换器 · 代理可用性检测</h1>
+<textarea id="input" placeholder="输入：\n- socks5://user:pass@ip:port\n- http://user:pass@ip:port\n- https://ip:port\n- ip:port 或完整 URL">scosk5://用户名:密码@IP:端口</textarea>
+
+
+<div class="btns">
+<button id="encode">编码</button>
+<button class="secondary" id="decode">解码</button>
+<button class="secondary" id="check">检测可用性</button>
+<button class="secondary" id="copy">复制结果</button>
+</div>
+
+
+<div class="row">
+<div class="output" id="output"></div>
+<div class="result" id="checkResult"></div>
+<div class="muted">提示：检测会尝试与代理建立连接并测量延迟；不带账号密码也会做端口连通性/握手延迟测试。</div>
+<div class="muted">输入格式：scosk5://用户名:密码@IP:端口&nbsp&nbsp&nbsp&nbsp&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;更多有趣的源码可访问:<a href="https://好物商店.com" target="_blank">https://好物商店.com</a></div>
+</div>
+</div>
+</div>
+<script>
+const API_BASE = "https://bitter-wildflower-b1af.1820622638.workers.dev"; // ← 改成你自己的 Worker 地址
+
+
+function encodeBase64Trim(str){
+const b64 = btoa(unescape(encodeURIComponent(str)));
+return b64.replace(/=+$/, '');
+}
+function decodeBase64Safe(str){
+try{ return decodeURIComponent(escape(atob(str))) }catch(e){ return '解码错误' }
+}
+
+
+function parseProxy(input){
+input = input.trim();
+input = input.replace(/^(socks5|https?|SOCKS5):\/\//i, '');
+// 支持：socks5://user:pass@ip:port、http(s)://[user:pass@]ip:port、ip:port
+try{
+if (/^\d+\.\d+\.\d+\.\d+:\d+$/.test(input)) {
+const [host, port] = input.split(":");
+return { scheme: 'http', host, port: Number(port) };
+}
+if (!/^\w+:\/\//.test(input)) input = 'http://' + input;
+const u = new URL(input);
+return {
+scheme: (u.protocol.replace(':','')).toLowerCase(),
+host: u.hostname,
+port: Number(u.port || (u.protocol==='https:'?443:80)),
+username: u.username || '',
+password: u.password || ''
+};
+} catch {
+return null;
+}
+}
+
+
+encode.onclick = () => {
+const v = input.value;
+output.textContent = encodeBase64Trim(v);
+};
+decode.onclick = () => {
+const v = input.value.trim();
+output.textContent = decodeBase64Safe(v);
+};
+copy.onclick = async () => {
+await navigator.clipboard.writeText((output.textContent||'').trim());
+copy.textContent = '已复制';
+setTimeout(()=>copy.textContent='复制结果',1200);
+};
+
+
+check.onclick = async () => {
+const parsed = parseProxy(input.value);
+if (!parsed) { checkResult.textContent = '❌ 无法解析输入，请确认格式'; return; }
+const body = JSON.stringify({
+scheme: parsed.scheme,
+host: parsed.host,
+port: parsed.port,
+username: parsed.username,
+password: parsed.password,
+// 目标站点：用于 CONNECT/握手（可根据需要替换）
+testHost: 'www.cloudflare.com',
+testPort: 443
+});
+checkResult.textContent = '⏳ 正在检测可用性与延迟…';
+try{
+const res = await fetch(`${API_BASE}/api/check`, { method:'POST', headers:{'content-type':'application/json'}, body });
+const data = await res.json();
+const flag = data.country_code ? countryFlag(data.country_code) + ' ' : '';
+const geo = data.country ? `${data.country}${data.region?(' · '+data.region):''}${data.city?(' · '+data.city):''}` : '未知地区';
+const status = data.ok ? '可用 ✅' : '不可用 ❌';
+const latency = (data.latency_ms!=null)? `${data.latency_ms} ms` : '未知';
+checkResult.textContent = `${flag}${data.target} · ${status} · 延迟 ${latency} \n位置：${geo}`;
+}catch(e){
+checkResult.textContent = '❌ 检测失败：' + (e && e.message || '网络错误');
+}
+};
+
+
+function countryFlag(cc){
+if(!cc) return '';
+const code = cc.trim().toUpperCase();
+return code.replace(/./g, ch => String.fromCodePoint(127397 + ch.charCodeAt()));
+}
+</script>
+</body>
+</html>
